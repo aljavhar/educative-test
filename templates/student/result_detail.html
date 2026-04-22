@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Natija — {{ attempt.topic.title }}{% endblock %}
+{% block page_title %}Test natijasi{% endblock %}
+
+{% block content %}
+<!-- Natija kartochkasi -->
+<div class="card mb-4 {% if attempt.passed %}border-success{% else %}border-danger{% endif %}" style="border-width:2px;">
+    <div class="card-body px-4 py-4">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h4 class="fw-bold mb-1">{{ attempt.topic.title }}</h4>
+                <div class="text-muted small mb-3">
+                    <i class="bi bi-people me-1"></i>{{ attempt.topic.group.name }}
+                    &nbsp;·&nbsp;
+                    <i class="bi bi-calendar me-1"></i>{{ attempt.submitted_at|date:"d.m.Y H:i" }}
+                    &nbsp;·&nbsp;
+                    {{ attempt.attempt_number }}-urinish
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    {% if attempt.passed %}
+                    <span class="badge bg-success fs-6 px-3 py-2">
+                        <i class="bi bi-check-circle me-1"></i> O'tdingiz!
+                    </span>
+                    {% else %}
+                    <span class="badge bg-danger fs-6 px-3 py-2">
+                        <i class="bi bi-x-circle me-1"></i> O'tмadingiz
+                    </span>
+                    {% endif %}
+                    <span class="text-muted small">O'tish bali: {{ attempt.topic.passing_score }}%</span>
+                </div>
+            </div>
+            <div class="col-md-6 text-center mt-3 mt-md-0">
+                <div class="d-flex justify-content-center gap-4">
+                    <div>
+                        <div style="font-size:2.5rem;font-weight:800;color:{% if attempt.passed %}#059669{% else %}#dc2626{% endif %}">
+                            {{ attempt.percentage|floatformat:0 }}%
+                        </div>
+                        <div class="text-muted small">Foiz</div>
+                    </div>
+                    <div>
+                        <div style="font-size:2.5rem;font-weight:800;">
+                            {{ attempt.score }}/{{ attempt.total_questions }}
+                        </div>
+                        <div class="text-muted small">To'g'ri javoblar</div>
+                    </div>
+                </div>
+                <div class="progress mt-3" style="height:8px;border-radius:4px;">
+                    <div class="progress-bar {% if attempt.passed %}bg-success{% else %}bg-danger{% endif %}"
+                         style="width:{{ attempt.percentage|floatformat:0 }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Batafsil javoblar -->
+<div class="card">
+    <div class="card-header py-3 px-4">
+        <i class="bi bi-list-check me-2 text-primary"></i>Javoblar tahlili
+    </div>
+    <div class="card-body p-0">
+        <div class="list-group list-group-flush">
+            {% for item in answers_data %}
+            <div class="list-group-item px-4 py-4 {% if item.is_correct %}border-start border-success border-3{% else %}border-start border-danger border-3{% endif %}">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="badge bg-secondary">{{ forloop.counter }}-savol</span>
+                    {% if item.is_correct %}
+                    <span class="badge badge-pass"><i class="bi bi-check me-1"></i>To'g'ri</span>
+                    {% else %}
+                    <span class="badge badge-fail"><i class="bi bi-x me-1"></i>Noto'g'ri</span>
+                    {% endif %}
+                </div>
+                <p class="fw-semibold mb-3">{{ item.question.question_text }}</p>
+
+                <div class="row g-2">
+                    {% for letter, text in item.displayed_options.items %}
+                    <div class="col-md-6">
+                        <div class="p-2 rounded small
+                            {% if letter == item.correct_display %}border border-success bg-success bg-opacity-10 text-success fw-bold
+                            {% elif letter == item.selected and not item.is_correct %}border border-danger bg-danger bg-opacity-10 text-danger
+                            {% else %}border border-light text-muted{% endif %}">
+                            <span class="fw-bold me-2">{{ letter }}.</span>{{ text }}
+                            {% if letter == item.correct_display %}
+                            <i class="bi bi-check-circle-fill ms-1 text-success"></i>
+                            {% endif %}
+                            {% if letter == item.selected and not item.is_correct %}
+                            <i class="bi bi-x-circle-fill ms-1 text-danger"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% if not item.is_correct %}
+                <div class="mt-2 small text-success">
+                    <i class="bi bi-lightbulb me-1"></i>
+                    To'g'ri javob: <strong>{{ item.correct_display }}</strong>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="card-footer px-4 py-3 d-flex justify-content-between">
+        <a href="{% url 'web:student_dashboard' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-house me-1"></i> Bosh sahifa
+        </a>
+        <a href="{% url 'web:student_results' %}" class="btn btn-outline-primary">
+            <i class="bi bi-award me-1"></i> Barcha natijalarim
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Guruhlar{% endblock %}
+{% block page_title %}Guruhlar{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+    <!-- Guruh qo'shish -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header py-3 px-4">
+                <i class="bi bi-plus-circle me-2 text-primary"></i>Yangi guruh yaratish
+            </div>
+            <div class="card-body px-4">
+                {% if not courses %}
+                <div class="alert alert-warning small">
+                    <i class="bi bi-exclamation-triangle me-1"></i>
+                    Avval <a href="{% url 'web:teacher_courses' %}">kurs yarating</a>, keyin guruh qo'sha olasiz.
+                </div>
+                {% else %}
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="create">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Guruh nomi <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control" placeholder="Masalan: 1-A guruh" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Kurs tanlang <span class="text-danger">*</span></label>
+                        <select name="course_id" class="form-select" required>
+                            <option value="">— Kursni tanlang —</option>
+                            {% for course in courses %}
+                            <option value="{{ course.id }}">{{ course.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-plus me-1"></i> Guruh yaratish
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Info -->
+        <div class="card mt-3">
+            <div class="card-body px-4 py-3">
+                <p class="small text-muted mb-2"><i class="bi bi-info-circle me-1 text-primary"></i>
+                    Guruh yaratgach, o'quvchilarni admin panel orqali guruhga biriktiring.
+                </p>
+                <a href="/admin/users/user/" target="_blank" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-person-gear me-1"></i>Admin panel
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Guruhlar ro'yxati -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header py-3 px-4 d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-people me-2 text-primary"></i>Barcha guruhlar</span>
+                <span class="badge bg-primary rounded-pill">{{ groups|length }}</span>
+            </div>
+            <div class="card-body p-0">
+                {% if groups %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th class="px-4">#</th>
+                                <th>Guruh nomi</th>
+                                <th>Kurs</th>
+                                <th>O'quvchilar</th>
+                                <th>Yaratildi</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for group in groups %}
+                            <tr>
+                                <td class="px-4 text-muted">{{ forloop.counter }}</td>
+                                <td>
+                                    <span class="fw-semibold">{{ group.name }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark">{{ group.course.name }}</span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-primary">{{ group.student_count }} o'quvchi</span>
+                                </td>
+                                <td class="text-muted small">{{ group.created_at|date:"d.m.Y" }}</td>
+                                <td class="text-end pe-4">
+                                    <form method="post" class="d-inline"
+                                          onsubmit="return confirm('{{ group.name }} guruhini o\'chirishni tasdiqlaysizmi? Guruh ichidagi mavzular ham o\'chadi.')">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="group_id" value="{{ group.id }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-people" style="font-size:2.5rem;opacity:0.25;"></i>
+                    <p class="mt-3 mb-1">Hali guruh yaratilmagan.</p>
+                    <p class="small">Avval kurs yarating, keyin guruh qo'sha olasiz.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

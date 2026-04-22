@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Kurslar{% endblock %}
+{% block page_title %}Kurslar{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+    <!-- Kurs qo'shish formasi -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header py-3 px-4">
+                <i class="bi bi-plus-circle me-2 text-primary"></i>Yangi kurs yaratish
+            </div>
+            <div class="card-body px-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="create">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Kurs nomi <span class="text-danger">*</span></label>
+                        <input type="text" name="name" class="form-control" placeholder="Masalan: Matematika" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold small">Tavsif (ixtiyoriy)</label>
+                        <textarea name="description" class="form-control" rows="3"
+                            placeholder="Kurs haqida qisqacha ma'lumot..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-plus me-1"></i> Kurs yaratish
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kurslar ro'yxati -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header py-3 px-4 d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-book me-2 text-primary"></i>Barcha kurslar</span>
+                <span class="badge bg-primary rounded-pill">{{ courses|length }}</span>
+            </div>
+            <div class="card-body p-0">
+                {% if courses %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th class="px-4">#</th>
+                                <th>Kurs nomi</th>
+                                <th>Tavsif</th>
+                                <th>Guruhlar</th>
+                                <th>Yaratildi</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for course in courses %}
+                            <tr>
+                                <td class="px-4 text-muted">{{ forloop.counter }}</td>
+                                <td>
+                                    <span class="fw-semibold">{{ course.name }}</span>
+                                </td>
+                                <td class="text-muted small">{{ course.description|default:"—"|truncatechars:40 }}</td>
+                                <td>
+                                    <span class="badge bg-light text-dark">{{ course.group_count }} ta</span>
+                                </td>
+                                <td class="text-muted small">{{ course.created_at|date:"d.m.Y" }}</td>
+                                <td class="text-end pe-4">
+                                    <form method="post" class="d-inline"
+                                          onsubmit="return confirm('{{ course.name }} kursini o\'chirishni tasdiqlaysizmi?')">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="course_id" value="{{ course.id }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-book" style="font-size:2.5rem;opacity:0.25;"></i>
+                    <p class="mt-3 mb-1">Hali kurs yaratilmagan.</p>
+                    <p class="small">Chap tarafdagi forma orqali birinchi kursni yarating.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

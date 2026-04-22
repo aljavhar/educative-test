@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+{% block title %}{{ topic.title }} — Test{% endblock %}
+{% block page_title %}Test: {{ topic.title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .question-card {
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        transition: border-color 0.2s;
+    }
+    .question-card.answered { border-color: #4f46e5; }
+    .option-label {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.6rem 1rem;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.15s;
+        margin-bottom: 0.5rem;
+        user-select: none;
+    }
+    .option-label:hover { background: #f0f0ff; border-color: #4f46e5; }
+    input[type="radio"]:checked + .option-label {
+        background: #ede9fe;
+        border-color: #4f46e5;
+        color: #3730a3;
+        font-weight: 600;
+    }
+    .option-key {
+        width: 28px;
+        height: 28px;
+        background: #e5e7eb;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+    }
+    input[type="radio"]:checked + .option-label .option-key {
+        background: #4f46e5;
+        color: #fff;
+    }
+    .sticky-timer {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: #fff;
+        border-bottom: 2px solid #e5e7eb;
+        padding: 0.75rem 1.5rem;
+        margin: -1.5rem -1.5rem 1.5rem -1.5rem;
+    }
+    #timer {
+        font-size: 1.25rem;
+        font-weight: 700;
+        font-family: monospace;
+    }
+    #timer.warning { color: #dc2626; }
+    .question-nav-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 6px;
+        border: 1.5px solid #e5e7eb;
+        background: #fff;
+        font-size: 0.8rem;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+    .question-nav-btn.answered { background: #4f46e5; color: #fff; border-color: #4f46e5; }
+    .question-nav-btn:hover:not(.answered) { background: #f0f0ff; border-color: #4f46e5; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Timer va progress -->
+<div class="sticky-timer">
+    <div class="d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-3">
+            <span class="text-muted small">Mavzu:</span>
+            <span class="fw-bold">{{ topic.title }}</span>
+            <span class="badge bg-secondary">{{ questions|length }} savol</span>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <div>
+                <span class="text-muted small me-2">Vaqt:</span>
+                {% if time_limit %}
+                <span id="timer">{{ time_limit }}:00</span>
+                {% else %}
+                <span class="text-muted small">Cheksiz</span>
+                {% endif %}
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" onclick="submitTest()">
+                <i class="bi bi-send-check me-1"></i> Topshirish
+            </button>
+        </div>
+    </div>
+    <!-- Progress bar -->
+    <div class="progress mt-2" style="height:4px;">
+        <div class="progress-bar bg-primary" id="progressBar" style="width:0%;transition:width 0.3s;"></div>
+    </div>
+</div>
+
+<form id="testForm" method="post" action="{% url 'web:student_submit_test' attempt.id %}">
+    {% csrf_token %}
+
+    <div class="row g-4">
+        <!-- Savollar -->
+        <div class="col-lg-9">
+            {% for q in questions %}
+            <div class="question-card p-4 mb-3" id="qcard_{{ q.id }}">
+                <div class="d-flex gap-3 mb-3">
+                    <span class="badge bg-primary rounded-pill" style="font-size:0.75rem;">{{ forloop.counter }}-savol</span>
+                </div>
+                <p class="fw-semibold mb-3" style="font-size:1.05rem;">{{ q.question_text }}</p>
+
+                {% for letter, text in q.options.items %}
+                <div>
+                    <input type="radio" name="q_{{ q.id }}" id="q{{ q.id }}_{{ letter }}"
+                           value="{{ letter }}" class="d-none"
+                           onchange="onAnswer('{{ q.id }}', '{{ letter }}')">
+                    <label for="q{{ q.id }}_{{ letter }}" class="option-label">
+                        <span class="option-key">{{ letter }}</span>
+                        <span>{{ text }}</span>
+                    </label>
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+
+            <div class="d-grid gap-2 mt-2">
+                <button type="button" class="btn btn-primary btn-lg" onclick="submitTest()">
+                    <i class="bi bi-send-check me-2"></i> Testni yakunlash va topshirish
+                </button>
+            </div>
+        </div>
+
+        <!-- O'ng panel: navigatsiya -->
+        <div class="col-lg-3">
+            <div class="card" style="position:sticky;top:80px;">
+                <div class="card-header py-3 px-3 small fw-bold">
+                    Savollar navigatsiyasi
+                </div>
+                <div class="card-body px-3">
+                    <div class="d-flex flex-wrap gap-1" id="questionNav">
+                        {% for q in questions %}
+                        <button type="button" class="question-nav-btn" id="nav_{{ q.id }}"
+                                onclick="scrollToQ('{{ q.id }}')">
+                            {{ forloop.counter }}
+                        </button>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-3 small text-muted">
+                        <span class="d-inline-block bg-primary rounded me-1" style="width:12px;height:12px;"></span> Javob berildi
+                        <br>
+                        <span class="d-inline-block border rounded me-1 mt-1" style="width:12px;height:12px;"></span> Javob berilmadi
+                    </div>
+                    <hr class="my-3">
+                    <div class="text-center">
+                        <div class="fw-bold" id="answeredCount">0</div>
+                        <div class="text-muted small">/ {{ questions|length }} savolga javob berildi</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const totalQ = {{ questions|length }};
+    const timeLimit = {% if time_limit %}{{ time_limit }} * 60{% else %}null{% endif %};
+    let answeredCount = 0;
+    let timerInterval = null;
+
+    // Javob berilganda
+    function onAnswer(qId, letter) {
+        const card = document.getElementById('qcard_' + qId);
+        const nav = document.getElementById('nav_' + qId);
+        if (!card.classList.contains('answered')) {
+            card.classList.add('answered');
+            nav.classList.add('answered');
+            answeredCount++;
+            updateProgress();
+        }
+    }
+
+    function updateProgress() {
+        const pct = (answeredCount / totalQ) * 100;
+        document.getElementById('progressBar').style.width = pct + '%';
+        document.getElementById('answeredCount').textContent = answeredCount;
+    }
+
+    function scrollToQ(qId) {
+        document.getElementById('qcard_' + qId).scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function submitTest() {
+        if (answeredCount < totalQ) {
+            const unanswered = totalQ - answeredCount;
+            if (!confirm(unanswered + ' ta savolga javob berilmadi. Shunga qaramasdan topshirasizmi?')) {
+                return;
+            }
+        }
+        if (timerInterval) clearInterval(timerInterval);
+        document.getElementById('testForm').submit();
+    }
+
+    // Timer
+    if (timeLimit) {
+        let remaining = timeLimit;
+        const timerEl = document.getElementById('timer');
+
+        function formatTime(sec) {
+            const m = Math.floor(sec / 60);
+            const s = sec % 60;
+            return String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+        }
+
+        timerEl.textContent = formatTime(remaining);
+
+        timerInterval = setInterval(() => {
+            remaining--;
+            timerEl.textContent = formatTime(remaining);
+            if (remaining <= 60) timerEl.classList.add('warning');
+            if (remaining <= 0) {
+                clearInterval(timerInterval);
+                alert("Vaqt tugadi! Test avtomatik topshirilmoqda...");
+                document.getElementById('testForm').submit();
+            }
+        }, 1000);
+    }
+</script>
+{% endblock %}

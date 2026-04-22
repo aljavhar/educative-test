@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}Bosh sahifa — O'quvchi{% endblock %}
+{% block page_title %}Bosh sahifa{% endblock %}
+
+{% block content %}
+<!-- Salom xabari -->
+<div class="card mb-3" style="background:linear-gradient(135deg,#4f46e5,#7c3aed);border:none;">
+    <div class="card-body px-4 py-3 text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-1">Salom, {{ user.full_name|default:user.username }}! 👋</h5>
+                <p class="mb-0 opacity-75 small">
+                    {% if group %}
+                    <i class="bi bi-people me-1"></i>{{ group.name }}
+                    &nbsp;·&nbsp;
+                    {% endif %}
+                    <i class="bi bi-calendar3 me-1"></i>{{ today|date:"d-MMMM, Y" }}
+                </p>
+            </div>
+            <a href="{% url 'web:student_results' %}" class="btn btn-light btn-sm">
+                <i class="bi bi-award me-1"></i> Natijalarim
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <!-- Bugungi testlar -->
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header py-3 px-4">
+                <i class="bi bi-calendar-check me-2 text-primary"></i>
+                Bugungi testlar
+                <span class="badge bg-primary ms-2">{{ today|date:"d.m.Y" }}</span>
+            </div>
+            <div class="card-body p-0">
+                {% if not group %}
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-people" style="font-size:2.5rem;opacity:0.25;"></i>
+                    <p class="mt-3 mb-1">Siz hali guruhga biriktirilmadingiz.</p>
+                    <p class="small">O'qituvchingizdan guruhga qo'shib berishini so'rang.</p>
+                </div>
+                {% elif not topics_info %}
+                <div class="text-center text-muted py-5">
+                    <i class="bi bi-calendar-x" style="font-size:2.5rem;opacity:0.25;"></i>
+                    <p class="mt-3 mb-1">Bugun uchun test rejalashtirilmagan.</p>
+                    <p class="small">Holat yangilanishi uchun sahifani yangilang.</p>
+                </div>
+                {% else %}
+                <div class="list-group list-group-flush">
+                    {% for item in topics_info %}
+                    <div class="list-group-item px-4 py-4">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1 fw-bold">{{ item.topic.title }}</h6>
+                                <div class="text-muted small mb-2">
+                                    <i class="bi bi-question-circle me-1"></i>{{ item.topic.question_count }} savol
+                                    &nbsp;·&nbsp;
+                                    <i class="bi bi-percent me-1"></i>O'tish bali: {{ item.topic.passing_score }}%
+                                    &nbsp;·&nbsp;
+                                    <i class="bi bi-arrow-repeat me-1"></i>{{ item.attempt_count }}/{{ item.topic.max_attempts }} urinish
+                                    {% if item.topic.time_limit_minutes %}
+                                    &nbsp;·&nbsp;
+                                    <i class="bi bi-clock me-1"></i>{{ item.topic.time_limit_minutes }} daqiqa
+                                    {% endif %}
+                                </div>
+                                {% if item.best_attempt %}
+                                <div class="d-flex align-items-center gap-2 mt-1">
+                                    <span class="small text-muted">Eng yaxshi natija:</span>
+                                    <span class="fw-bold small">{{ item.best_attempt.score }}/{{ item.best_attempt.total_questions }}</span>
+                                    <span class="badge {% if item.best_attempt.passed %}badge-pass{% else %}badge-fail{% endif %}">
+                                        {% if item.best_attempt.passed %}O'tdi{% else %}O'tmadi{% endif %}
+                                    </span>
+                                </div>
+                                {% endif %}
+                                {% if not item.can_attempt and item.reason %}
+                                <div class="text-warning small mt-1">
+                                    <i class="bi bi-exclamation-triangle me-1"></i>{{ item.reason }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="ms-3">
+                                {% if item.can_attempt %}
+                                <a href="{% url 'web:student_test' item.topic.id %}"
+                                   class="btn btn-primary"
+                                   onclick="return confirm('Testni boshlashni tasdiqlaysizmi? Boshlangandan so\'ng urinish soni kamayadi.')">
+                                    <i class="bi bi-play-fill me-1"></i>
+                                    {% if item.attempt_count > 0 %}Qayta topshirish{% else %}Testni boshlash{% endif %}
+                                </a>
+                                {% else %}
+                                <button class="btn btn-secondary" disabled>
+                                    <i class="bi bi-lock me-1"></i> Yopiq
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- So'nggi natijalar -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header py-3 px-4">
+                <i class="bi bi-clock-history me-2 text-primary"></i>So'nggi natijalarim
+            </div>
+            <div class="card-body p-0">
+                {% if recent_results %}
+                <ul class="list-group list-group-flush">
+                    {% for a in recent_results %}
+                    <li class="list-group-item px-4 py-3">
+                        <a href="{% url 'web:student_result_detail' a.id %}" class="text-decoration-none">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-medium small text-dark">{{ a.topic.title|truncatechars:25 }}</div>
+                                    <div class="text-muted" style="font-size:0.75rem;">{{ a.submitted_at|date:"d.m.Y H:i" }}</div>
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-bold small">{{ a.score }}/{{ a.total_questions }}</div>
+                                    <span class="badge {% if a.passed %}badge-pass{% else %}badge-fail{% endif %}">
+                                        {% if a.passed %}✓{% else %}✗{% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <div class="card-footer text-center py-2">
+                    <a href="{% url 'web:student_results' %}" class="btn btn-sm btn-outline-primary">
+                        Barcha natijalar <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-inbox" style="font-size:2rem;opacity:0.25;"></i>
+                    <p class="mt-2 small mb-0">Hali natijalar yo'q</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

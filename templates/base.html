@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EduTest Platform{% endblock %}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-width: 240px;
+            --primary: #4f46e5;
+            --primary-dark: #3730a3;
+        }
+        body {
+            background: #f5f6fa;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        /* ── Sidebar ── */
+        .sidebar {
+            width: var(--sidebar-width);
+            min-height: 100vh;
+            background: linear-gradient(180deg, #1e1b4b 0%, #312e81 100%);
+            position: fixed;
+            top: 0; left: 0;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar-brand {
+            padding: 1.5rem 1.25rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .sidebar-brand h5 {
+            color: #fff;
+            font-weight: 700;
+            margin: 0;
+            font-size: 1.1rem;
+        }
+        .sidebar-brand small {
+            color: rgba(255,255,255,0.55);
+            font-size: 0.75rem;
+        }
+        .sidebar-nav {
+            padding: 1rem 0;
+            flex: 1;
+        }
+        .sidebar-nav .nav-label {
+            color: rgba(255,255,255,0.4);
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 0.75rem 1.25rem 0.25rem;
+        }
+        .sidebar-nav .nav-link {
+            color: rgba(255,255,255,0.75);
+            padding: 0.55rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            border-radius: 0;
+            font-size: 0.9rem;
+            transition: all 0.15s;
+        }
+        .sidebar-nav .nav-link:hover,
+        .sidebar-nav .nav-link.active {
+            background: rgba(255,255,255,0.12);
+            color: #fff;
+        }
+        .sidebar-nav .nav-link i {
+            font-size: 1rem;
+            width: 20px;
+            text-align: center;
+        }
+        .sidebar-footer {
+            padding: 1rem 1.25rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .sidebar-footer .user-info {
+            color: rgba(255,255,255,0.8);
+            font-size: 0.85rem;
+        }
+        .sidebar-footer .user-info strong {
+            display: block;
+            color: #fff;
+        }
+        /* ── Main content ── */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+        .topbar {
+            background: #fff;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .topbar h4 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #111827;
+        }
+        .page-content {
+            padding: 1.5rem;
+        }
+        /* ── Cards ── */
+        .stat-card {
+            border: none;
+            border-radius: 12px;
+            padding: 1.25rem;
+            background: #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        .stat-card .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+        .stat-card .stat-number {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #111827;
+        }
+        .stat-card .stat-label {
+            color: #6b7280;
+            font-size: 0.85rem;
+        }
+        /* ── Table card ── */
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        .card-header {
+            background: #fff;
+            border-bottom: 1px solid #f3f4f6;
+            font-weight: 600;
+            border-radius: 12px 12px 0 0 !important;
+        }
+        .table th {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #6b7280;
+            border-bottom: 2px solid #f3f4f6;
+        }
+        .table td { vertical-align: middle; }
+        /* ── Badges ── */
+        .badge-pass { background: #d1fae5; color: #065f46; }
+        .badge-fail { background: #fee2e2; color: #991b1b; }
+        /* ── Mobile toggle ── */
+        .sidebar-toggle {
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); transition: transform 0.3s; }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .sidebar-toggle { display: block; }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+{% if user.is_authenticated %}
+<!-- ── Sidebar ── -->
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <h5><i class="bi bi-mortarboard-fill me-2"></i>EduTest</h5>
+        <small>Ta'lim platformasi</small>
+    </div>
+    <nav class="sidebar-nav">
+        {% if user.is_teacher %}
+        <div class="nav-label">O'qituvchi</div>
+        <a href="{% url 'web:teacher_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'teacher_dashboard' %}active{% endif %}">
+            <i class="bi bi-speedometer2"></i> Bosh sahifa
+        </a>
+        <a href="{% url 'web:teacher_courses' %}" class="nav-link {% if request.resolver_match.url_name == 'teacher_courses' %}active{% endif %}">
+            <i class="bi bi-book"></i> Kurslar
+        </a>
+        <a href="{% url 'web:teacher_groups' %}" class="nav-link {% if request.resolver_match.url_name == 'teacher_groups' %}active{% endif %}">
+            <i class="bi bi-people"></i> Guruhlar
+        </a>
+        <a href="{% url 'web:teacher_topics' %}" class="nav-link {% if 'topic' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-journals"></i> Mavzular
+        </a>
+        <a href="{% url 'web:teacher_students' %}" class="nav-link {% if request.resolver_match.url_name == 'teacher_students' %}active{% endif %}">
+            <i class="bi bi-person-lines-fill"></i> O'quvchilar
+        </a>
+        <a href="{% url 'web:teacher_analytics' %}" class="nav-link {% if request.resolver_match.url_name == 'teacher_analytics' %}active{% endif %}">
+            <i class="bi bi-bar-chart-line"></i> Analitika
+        </a>
+        <div class="nav-label mt-2">Tizim</div>
+        <a href="/api/docs/" class="nav-link" target="_blank">
+            <i class="bi bi-code-square"></i> API Docs
+        </a>
+        {% else %}
+        <div class="nav-label">O'quvchi</div>
+        <a href="{% url 'web:student_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'student_dashboard' %}active{% endif %}">
+            <i class="bi bi-house"></i> Bosh sahifa
+        </a>
+        <a href="{% url 'web:student_results' %}" class="nav-link {% if 'result' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="bi bi-award"></i> Natijalarim
+        </a>
+        {% endif %}
+    </nav>
+    <div class="sidebar-footer">
+        <div class="user-info">
+            <strong>{{ user.full_name|default:user.username }}</strong>
+            <span class="badge bg-light text-dark mt-1">
+                {% if user.is_teacher %}O'qituvchi{% else %}O'quvchi{% endif %}
+            </span>
+        </div>
+        <a href="{% url 'web:logout' %}" class="btn btn-sm btn-outline-light w-100 mt-2">
+            <i class="bi bi-box-arrow-right"></i> Chiqish
+        </a>
+    </div>
+</aside>
+
+<!-- ── Main content ── -->
+<div class="main-content">
+    <div class="topbar">
+        <div class="d-flex align-items-center gap-2">
+            <button class="btn btn-sm btn-light sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">
+                <i class="bi bi-list"></i>
+            </button>
+            <h4>{% block page_title %}{% endblock %}</h4>
+        </div>
+        <div class="text-muted small">
+            <i class="bi bi-calendar3 me-1"></i>
+            {% now "d-m-Y" %}
+        </div>
+    </div>
+
+    <div class="page-content">
+        {% if messages %}
+        {% for msg in messages %}
+        <div class="alert alert-{% if msg.tags == 'error' %}danger{% elif msg.tags == 'success' %}success{% elif msg.tags == 'warning' %}warning{% else %}info{% endif %} alert-dismissible fade show" role="alert">
+            {{ msg }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        {% block content %}{% endblock %}
+    </div>
+</div>
+
+{% else %}
+<!-- Authenticated emas — faqat content ko'rsatiladi -->
+{% block auth_content %}{% endblock %}
+{% endif %}
+
+<!-- Bootstrap 5 JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

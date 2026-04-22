@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Natijalarim{% endblock %}
+{% block page_title %}Barcha natijalarim{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header py-3 px-4 d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-award me-2 text-primary"></i>Barcha urinishlarim</span>
+        <div class="d-flex gap-2 align-items-center">
+            {% if attempts %}
+            {% with total=attempts|length %}
+            <span class="badge bg-primary rounded-pill">{{ total }} ta urinish</span>
+            {% endwith %}
+            {% endif %}
+        </div>
+    </div>
+    <div class="card-body p-0">
+        {% if attempts %}
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th class="px-4">#</th>
+                        <th>Mavzu</th>
+                        <th>Guruh</th>
+                        <th>Natija</th>
+                        <th>Foiz</th>
+                        <th>Holat</th>
+                        <th>Urinish</th>
+                        <th>Sana</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for a in attempts %}
+                    <tr>
+                        <td class="px-4 text-muted">{{ forloop.counter }}</td>
+                        <td>
+                            <span class="fw-semibold">{{ a.topic.title }}</span>
+                            <div class="text-muted small">{{ a.topic.date|date:"d.m.Y" }}</div>
+                        </td>
+                        <td>
+                            <span class="badge bg-light text-dark">{{ a.topic.group.name }}</span>
+                            <div class="text-muted small">{{ a.topic.group.course.name }}</div>
+                        </td>
+                        <td class="fw-bold">{{ a.score }}/{{ a.total_questions }}</td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="progress" style="height:6px;min-width:60px;">
+                                    <div class="progress-bar {% if a.passed %}bg-success{% else %}bg-danger{% endif %}"
+                                         style="width:{{ a.percentage|floatformat:0 }}%"></div>
+                                </div>
+                                <span class="small fw-bold">{{ a.percentage|floatformat:0 }}%</span>
+                            </div>
+                        </td>
+                        <td>
+                            {% if a.passed %}
+                            <span class="badge badge-pass">O'tdi</span>
+                            {% else %}
+                            <span class="badge badge-fail">O'tmadi</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-muted small">{{ a.attempt_number }}-urinish</td>
+                        <td class="text-muted small">{{ a.submitted_at|date:"d.m H:i" }}</td>
+                        <td class="pe-4">
+                            <a href="{% url 'web:student_result_detail' a.id %}"
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center text-muted py-5">
+            <i class="bi bi-award" style="font-size:2.5rem;opacity:0.25;"></i>
+            <p class="mt-3 mb-2">Hali test topshirmagansiz.</p>
+            <a href="{% url 'web:student_dashboard' %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-house me-1"></i> Bosh sahifaga o'tish
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if attempts %}
+<!-- Umumiy statistika -->
+<div class="row g-3 mt-1">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body py-3 px-4">
+                <div class="row text-center">
+                    <div class="col">
+                        <div class="fw-bold fs-5">{{ attempts|length }}</div>
+                        <div class="text-muted small">Jami urinishlar</div>
+                    </div>
+                    <div class="col">
+                        <div class="fw-bold fs-5 text-success">
+                            {% with passed_count=0 %}
+                            {% for a in attempts %}{% if a.passed %}{% with passed_count=passed_count|add:1 %}{% endwith %}{% endif %}{% endfor %}
+                            {% endwith %}
+                            {{ attempts|length }}
+                        </div>
+                        <div class="text-muted small">O'tgan testlar</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
