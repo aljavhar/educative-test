@@ -5,7 +5,14 @@ Production-ready, API-first configuration.
 
 import os
 from datetime import timedelta
+import dj_database_url 
+import os
+from dotenv import load_dotenv
 from decouple import config
+
+load_dotenv()
+
+ENVIRONMENT = os.getenv('ENVIRONMENT', 'development')
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -77,33 +84,39 @@ WSGI_APPLICATION = 'eduplatform.wsgi.application'
 
 # ─── Database (PostgreSQL) ──────────────────────────────────────────────────────
 # Uses DATABASE_URL from .env file
-DATABASE_URL = config('DATABASE_URL', default=f'sqlite:///{os.path.join(BASE_DIR, "db.sqlite3")}')
+# DATABASE_URL = config('DATABASE_URL', default=f'sqlite:///{os.path.join(BASE_DIR, "db.sqlite3")}')
 
-if DATABASE_URL.startswith('postgres'):
-    import re
-    match = re.match(
-        r'postgres(?:ql)?://(?P<user>[^:]+):(?P<password>[^@]+)@(?P<host>[^:/]+)(?::(?P<port>\d+))?/(?P<name>.+)',
-        DATABASE_URL
-    )
-    if match:
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.postgresql',
-                'NAME': match.group('name'),
-                'USER': match.group('user'),
-                'PASSWORD': match.group('password'),
-                'HOST': match.group('host'),
-                'PORT': match.group('port') or '5432',
-            }
-        }
-else:
-    # Fallback to SQLite for development
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-        }
-    }
+# if DATABASE_URL.startswith('postgres'):
+#     import re
+#     match = re.match(
+#         r'postgres(?:ql)?://(?P<user>[^:]+):(?P<password>[^@]+)@(?P<host>[^:/]+)(?::(?P<port>\d+))?/(?P<name>.+)',
+#         DATABASE_URL
+#     )
+#     if match:
+#         DATABASES = {
+#             'default': {
+#                 'ENGINE': 'django.db.backends.postgresql',
+#                 'NAME': match.group('name'),
+#                 'USER': match.group('user'),
+#                 'PASSWORD': match.group('password'),
+#                 'HOST': match.group('host'),
+#                 'PORT': match.group('port') or '5432',
+#             }
+#         }
+# else:
+#     # Fallback to SQLite for development
+#     DATABASES = {
+#         'default': {
+#             'ENGINE': 'django.db.backends.sqlite3',
+#             'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#         }
+#     }
+
+# Railway postgres uchun
+
+POSTGRES_LOCALLY = False
+if ENVIRONMENT == 'production' or POSTGRES_LOCALLY == True:
+    DATABASES = {'default': dj_database_url.parse(config('DATABASE_URL'))}
 
 # ─── Custom User Model ──────────────────────────────────────────────────────────
 AUTH_USER_MODEL = 'users.User'
