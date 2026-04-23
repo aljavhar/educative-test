@@ -20,7 +20,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = config('SECRET_KEY', default='dev-secret-key-change-in-production')
 DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = ['*']  # Restrict in production
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'educative-test-production.up.railway.app'] 
+
+CSRF_TRUSTED_ORIGINS = ['https://educative-test-production.up.railway.app']
 
 # ─── Installed Apps ────────────────────────────────────────────────────────────
 INSTALLED_APPS = [
