@@ -116,9 +116,15 @@ WSGI_APPLICATION = 'eduplatform.wsgi.application'
 
 # Railway postgres uchun
 
-POSTGRES_LOCALLY = False
-if ENVIRONMENT == 'production' or POSTGRES_LOCALLY == True:
-    DATABASES = {'default': dj_database_url.parse(config('DATABASE_URL'))}
+DATABASES = {
+    "default": dj_database_url.config(
+        default=os.environ.get("DATABASE_URL")
+    )
+}
+
+# POSTGRES_LOCALLY = False
+# if ENVIRONMENT == 'production' or POSTGRES_LOCALLY == True:
+#     DATABASES = {'default': dj_database_url.parse(config('DATABASE_URL'))}
 
 # ─── Custom User Model ──────────────────────────────────────────────────────────
 AUTH_USER_MODEL = 'users.User'
