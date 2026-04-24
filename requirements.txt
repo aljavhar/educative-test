@@ -7,3 +7,4 @@ python-decouple>=3.8
 drf-yasg>=1.21
 Pillow>=10.0
 gunicorn>=21.0
+dj-database-url
